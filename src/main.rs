@@ -58,21 +58,14 @@ struct FileTask {
     about = "Find and manage duplicate files using blake3 hashes",
     long_about = "A command line tool to find and manage duplicate files by calculating blake3 hashes.
 It can cache results between runs and selectively move duplicates to a separate folder.
-
-
-Features:
-- Fast blake3 hashing
-- Persistent caching
-- Modification time checking
-- Interactive duplicate management"
-)]
+")]
 struct Args {
     /// Folder to scan
     #[arg(short, long)]
     path: String,
 
     /// Cache file for storing index
-    #[arg(short, long)]
+    #[arg(short, long, default_value = ".dedupe.cache")]
     cache: Option<String>,
 
     /// Folder to move duplicates to
@@ -101,24 +94,20 @@ fn get_mtime<P: AsRef<Path>>(path: P) -> Result<u64, Box<dyn std::error::Error +
     Ok(mtime)
 }
 
+#[instrument(skip(db))]
 fn find_duplicates(db: &sled::Db) -> HashMap<String, Vec<String>> {
     let mut hash_map: HashMap<String, Vec<String>> = HashMap::new();
 
     for item in db.iter() {
         if let Ok((_, value)) = item {
-            let hash = String::from_utf8_lossy(&value);
-            if hash.len() == 64 {
-                // blake3 hash length
-                if let Ok(Some(path)) = db.get(value.to_vec()) {
-                    let path_str = String::from_utf8_lossy(&path).to_string();
-                    hash_map
-                        .entry(hash.to_string())
-                        .or_insert_with(Vec::new)
-                        .push(path_str);
-                }
-            }
+            let file_entry = FileEntry::from_bytes(&value).unwrap();
+            hash_map
+                .entry(file_entry.hash)
+                .or_insert_with(Vec::new)
+                .push(file_entry.path);
         }
     }
+    
 
     hash_map
         .into_iter()
@@ -260,11 +249,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     // Setup tracing
     let _ = tracing_subscriber::FmtSubscriber::builder()
-        .with_max_level(if args.verbose {
-            tracing::Level::TRACE
-        } else {
+        .with_max_level(
             tracing::Level::INFO
-        })
+        )
         .with_file(true)
         .with_line_number(true)
         .with_target(false)
@@ -293,6 +280,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         index_folder(&db, Path::new(&args.path).to_path_buf(), !args.no_recursive).await?;
         db
     };
+    info!("Found files: {:#?}", db.iter()
+        .filter_map(|r| r.ok())
+        .filter_map(|(_, v)| FileEntry::from_bytes(&v))
+        .collect::<Vec<FileEntry>>());
 
     let duplicates = find_duplicates(&db);
 
@@ -300,6 +291,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         println!("No duplicates found");
         return Ok(());
     }
+
 
     println!("Found duplicates:");
     for (hash, paths) in &duplicates {
