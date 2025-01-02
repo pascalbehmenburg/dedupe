@@ -20,37 +20,49 @@ A cli tool written in rust to find exactly identical files (by their file conten
 
 ## Installation
 
+Clone repo and navigate into it:
+```sh
+git clone https://github.com/pascalbehmenburg/dedupe
+cd dedupe
+```
+
+Install dedupe executable using cargo:
 ```sh
 cargo install --path .
 ```
 
-## Usage
+## Example Usage
 
 ```sh
 # Recursive scan, without cache file and default ./duplicates folder
-file-dedup -p /path/to/scan
+dedupe -p /path/to/scan
 
 # Non-recursive
-file-dedup -p /path/to/scan --no-recursive
+dedupe -p /path/to/scan --no-recursive
 
 # With cache file
-file-dedup -p /path/to/scan -c index.db
+dedupe -p /path/to/scan -c index.db
 
 # Use existing cache without reindexing
-file-dedup -p /path/to/scan -c index.db --reindex false
+dedupe -p /path/to/scan -c index.db --reindex false
 
 # Custom duplicates folder
-file-dedup -p /path/to/scan -d /path/to/duplicates
+dedupe -p /path/to/scan -d /path/to/duplicates
 ```
 
 ## Options
 
+Prefer to use the help command as it will be more up to date:
+- `--help`: To show all options
+
+Other options:
 - `-p, --path <path>`: Path to scan for duplicates
 - `-c, --cache <cache>`: Path to cache file
 - `-d, --duplicates <duplicates>`: Path to store duplicates
 - `--reindex <reindex>`: Reindex files
 - `--no_recursive`: Whether to include subfolders
 - `-v, --verbose`: Whether to verbosely print logs
+
 
 ## License
 
