@@ -107,7 +107,6 @@ fn find_duplicates(db: &sled::Db) -> HashMap<String, Vec<String>> {
                 .push(file_entry.path);
         }
     }
-    
 
     hash_map
         .into_iter()
@@ -247,19 +246,18 @@ async fn calculate_hash_async(path: PathBuf) -> Result<String, std::io::Error> {
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let args = Args::parse();
 
-    // Setup tracing
-    let _ = tracing_subscriber::FmtSubscriber::builder()
-        .with_max_level(
-            tracing::Level::INFO
-        )
-        .with_file(true)
-        .with_line_number(true)
-        .with_target(false)
-        .with_thread_ids(true)
-        .with_thread_names(true)
-        .with_ansi(true)
-        .pretty()
-        .init();
+    if args.verbose {
+        let _ = tracing_subscriber::FmtSubscriber::builder()
+            .with_max_level(tracing::Level::INFO)
+            .with_file(true)
+            .with_line_number(true)
+            .with_target(false)
+            .with_thread_ids(true)
+            .with_thread_names(true)
+            .with_ansi(true)
+            .pretty()
+            .init();
+    }
 
     info!("Starting file deduplication");
     debug!("Arguments: {:?}", args);
@@ -280,18 +278,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         index_folder(&db, Path::new(&args.path).to_path_buf(), !args.no_recursive).await?;
         db
     };
-    info!("Found files: {:#?}", db.iter()
-        .filter_map(|r| r.ok())
-        .filter_map(|(_, v)| FileEntry::from_bytes(&v))
-        .collect::<Vec<FileEntry>>());
+
+    info!(
+        "Found files: {:#?}",
+        db.iter()
+            .filter_map(|r| r.ok())
+            .filter_map(|(_, v)| FileEntry::from_bytes(&v))
+            .collect::<Vec<FileEntry>>()
+    );
 
     let duplicates = find_duplicates(&db);
-
     if duplicates.is_empty() {
         println!("No duplicates found");
         return Ok(());
     }
-
 
     println!("Found duplicates:");
     for (hash, paths) in &duplicates {
