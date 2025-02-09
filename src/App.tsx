@@ -5,10 +5,52 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { invoke } from "@tauri-apps/api/core";
+import { FileIcon, FolderIcon, FolderOpenIcon } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./components/ui/button";
-import { Separator } from "./components/ui/separator";
 import "./index.css";
+
+const DuplicateEntry = ({
+  hash,
+  paths,
+  group_number,
+}: {
+  hash: string;
+  paths: string[];
+  group_number: number;
+}) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <Collapsible open={open} onOpenChange={setOpen} key={hash}>
+      <CollapsibleTrigger className="hover:bg-foreground group border-b border-border flex flex-row items-center text-start px-2 py-1 w-full">
+        <div className="flex flex-col w-full">
+          <p className="flex flex-row items-center gap-2 pl-1 text-pretty group-hover:text-background">
+            {open ? (
+              <FolderOpenIcon className="size-5 group-hover:text-background" />
+            ) : (
+              <FolderIcon className="size-5 group-hover:text-background" />
+            )}
+            {group_number} Group - {paths.length} files
+          </p>
+          <p className="text-muted-foreground group-hover:text-background/65 pl-8 text-sm truncate">
+            [{hash}]
+          </p>
+        </div>
+      </CollapsibleTrigger>
+      {paths.map((path) => (
+        <CollapsibleContent
+          key={path}
+          className="pl-10 hover:bg-foreground hover:text-background hover:cursor-pointer border-b border-border"
+        >
+          <p className="flex flex-row items-center gap-1 truncate text-pretty">
+            <FileIcon className="size-5 group-hover:text-background" />
+            {path}
+          </p>
+        </CollapsibleContent>
+      ))}
+    </Collapsible>
+  );
+};
 
 function App() {
   let [test, setTest] = useState<Map<string, string[]> | null>(null);
@@ -27,35 +69,30 @@ function App() {
 
   let counter = 1;
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <main className="size-full min-w-screen min-h-screen bg-background text-text">
         <div className="flex flex-row h-full">
-          <div className="flex-col space-y-2 border-r-border py-2 bg-background w-5/12 min-h-screen">
-            <h1 className="text-4xl text-center">Dedupe</h1>
-            <Separator className="bg-border" />
+          <div className="flex flex-col w-full min-h-screen border border-border">
+            <h1 className="text-4xl text-center py-2 border-b border-border">
+              Dedupe
+            </h1>
             {test &&
-              Array.from(test.entries()).map(([key, values]) => (
-                <Collapsible
-                  className="dark:bg-card-foreground/5 rounded-lg px-4 py-2"
-                  key={key}
-                >
-                  <CollapsibleTrigger>
-                    Duplikatgruppe {counter++}:
-                  </CollapsibleTrigger>
-                  {values.map((value) => (
-                    <CollapsibleContent key={value} className="pl-4">
-                      {value}
-                    </CollapsibleContent>
-                  ))}
-                </Collapsible>
+              Array.from(test.entries()).map(([hash, paths]) => (
+                <DuplicateEntry
+                  hash={hash}
+                  paths={paths}
+                  group_number={counter++}
+                />
               ))}
-            <div className="flex justify-center">
-              <Button className="w-11/12" type="button" onClick={indexFiles}>
-                Index Files
-              </Button>
-            </div>
+            <Button
+              className="rounded-none bg-background hover:bg-foreground text-text hover:text-background border-t border-border mt-auto"
+              type="button"
+              onClick={indexFiles}
+            >
+              Index Files
+            </Button>
           </div>
-          <div className="flex-col bg-background/50 w-7/12 rounded-lg"></div>
+          {/* <div className="flex-col bg-background/50 w-7/12 rounded-lg"></div> */}
         </div>
       </main>
     </ThemeProvider>
