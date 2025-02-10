@@ -81,9 +81,9 @@ function App() {
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <main className="size-full min-w-screen min-h-screen bg-background text-text antialiased">
         <div className="flex flex-row h-full">
-          <div className="flex flex-col md:w-6/12 min-h-screen border border-border">
-            <h1 className="text-4xl text-center py-2 border-b border-border">
-              Dedupe
+          <div className="flex flex-col md:w-5/12 min-h-screen border border-border">
+            <h1 className="text-4xl text-center pt-2 pb-4 border-b border-border">
+              dedupe
             </h1>
             {test &&
               Array.from(test.entries()).map(([hash, paths]) => (
@@ -98,11 +98,11 @@ function App() {
               type="button"
               onClick={indexFiles}
             >
-              Index Files
+              Index files
             </Button>
           </div>
-          <div className="flex-col md:w-6/12 mx-1 my-1 pt-1 border-border border min-h-screen">
-            <div className="flex flex-row h-2/12">Filename</div>
+          <div className="flex-col md:w-7/12 border-border border min-h-screen">
+            <div className="flex flex-row h-7/12">Filename</div>
             <div className="flex flex-row bg-green-500">asdsad</div>
           </div>
         </div>

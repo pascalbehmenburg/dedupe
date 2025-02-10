@@ -1,3 +1,4 @@
+#![feature(os_str_display)]
 use dashmap::DashMap;
 use keccak_asm::{Digest, Sha3_256};
 use rayon::prelude::*;
@@ -13,9 +14,11 @@ fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
-fn index_folder(path: &str) -> DashMap<String, Vec<PathBuf>> {
-    let path = PathBuf::from(path);
-    let mut file_entries: DashMap<String, Vec<PathBuf>> = DashMap::new();
+fn index_folder(path: &str) -> DashMap<String, Vec<String>> {
+    let path = PathBuf::from(path)
+        .canonicalize()
+        .unwrap_or_else(|_| PathBuf::from(path));
+    let mut file_entries: DashMap<String, Vec<String>> = DashMap::new();
     println!("Indexing folder: {:?}", path);
 
     let walker = WalkDir::new(path);
@@ -27,7 +30,11 @@ fn index_folder(path: &str) -> DashMap<String, Vec<PathBuf>> {
         .for_each(|entry| {
             let path = entry.into_path();
             let hash = hash_file(&path).unwrap();
-            file_entries.entry(hash).or_default().push(path);
+            file_entries.entry(hash).or_default().push(
+                path.to_string_lossy()
+                    .trim_start_matches(r"\\?\")
+                    .to_string(),
+            );
         });
 
     file_entries = file_entries

@@ -1,5 +1,5 @@
 {
-  "name": "dedupe-v2",
+  "name": "dedupe",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -33,6 +33,6 @@
     "tailwindcss": "3",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.5.1",
-    "@tauri-apps/cli": "^2"
+    "@tauri-apps/cli": "^2.2.7"
   }
 }
